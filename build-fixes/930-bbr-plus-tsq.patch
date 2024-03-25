@@ -1,0 +1,22 @@
+diff --git a/target/linux/generic/config-5.15 b/target/linux/generic/config-5.15
+index b75bdd92b2..214a1e6ecd 100755
+--- a/target/linux/generic/config-5.15
++++ b/target/linux/generic/config-5.15
+@@ -1382,7 +1382,7 @@ CONFIG_DEBUG_KERNEL=y
+ # CONFIG_DEBUG_ZBOOT is not set
+ # CONFIG_DECNET is not set
+ # CONFIG_DEFAULT_CODEL is not set
+-CONFIG_DEFAULT_CUBIC=y
++CONFIG_DEFAULT_BBR=y
+ CONFIG_DEFAULT_DEADLINE=y
+ # CONFIG_DEFAULT_FQ is not set
+ CONFIG_DEFAULT_FQ_CODEL=y
+@@ -6436,7 +6436,7 @@ CONFIG_SYSVIPC_SYSCTL=y
+ # CONFIG_TCG_XEN is not set
+ # CONFIG_TCIC is not set
+ CONFIG_TCP_CONG_ADVANCED=y
+-# CONFIG_TCP_CONG_BBR is not set
++CONFIG_TCP_CONG_BBR=y
+ # CONFIG_TCP_CONG_BIC is not set
+ # CONFIG_TCP_CONG_CDG is not set
+ CONFIG_TCP_CONG_CUBIC=y
