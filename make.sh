@@ -8,6 +8,7 @@ make clean
 ./scripts/feeds update -a && \
 cp build-fixes/feeds.nss.qca-nss-clients.Makefile feeds/nss/qca-nss-clients/Makefile && \
 cp build-fixes/feeds.nss.qca-nss-ecm.Makefile feeds/nss/qca-nss-ecm/Makefile && \
+cp build-fixes/package_feeds_luci_luci-mod-status_patches_990-add-nss-load-to-status.patch package/feeds/luci/luci-mod-status/patches/990-add-nss-load-to-status.patch && \
 
 #cp build-fixes/target.linux.ipq806x.patches-5.15.999-998-bbr-plus-tsq.patch target/linux/ipq806x/patches-5.15/999-998-bbr-plus-tsq.patch && \
 #git apply build-fixes\930-bbr-plus-tsq.patch && \
