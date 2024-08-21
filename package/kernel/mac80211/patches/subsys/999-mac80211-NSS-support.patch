@@ -236,7 +236,7 @@
  /*
   * monitor mode reception
   *
-@@ -2635,10 +2689,16 @@ static void ieee80211_deliver_skb_to_loc
+@@ -2635,6 +2689,11 @@ static void ieee80211_deliver_skb_to_loc
  			ether_addr_copy(ehdr->h_dest, sdata->vif.addr);
  
  		/* deliver to local stack */
@@ -246,7 +246,10 @@
 +		}
 +#else
  		if (rx->list)
+ #if LINUX_VERSION_IS_GEQ(4,19,0)
  			list_add_tail(&skb->list, rx->list);
+@@ -2643,6 +2702,7 @@ static void ieee80211_deliver_skb_to_loc
+ #endif
  		else
  			netif_receive_skb(skb);
 +#endif
