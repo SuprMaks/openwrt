@@ -14,6 +14,7 @@ cp build-fixes/package_feeds_luci_luci-mod-status_patches_990-add-nss-load-to-st
 #git apply build-fixes\930-bbr-plus-tsq.patch && \
 #cp build-fixes/package.network.services.dnsmasq.patches.900-strict-order-nxdomain.patch package/network/services/dnsmasq/patches/900-strict-order-nxdomain.patch && \
 ./scripts/feeds install -a && \
+patch --verbose -p0 < ./build-fixes/curl_wolfssl_quic_tls13.patch && \
 #cp diff_base .config && make defconfig && \
 ./scripts/getver.sh && \
 make -j $(nproc) download world
