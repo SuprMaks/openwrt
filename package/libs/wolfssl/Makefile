@@ -125,7 +125,6 @@ TARGET_CFLAGS += \
 
 # --enable-stunnel needed for OpenSSL API compatibility bits
 CONFIGURE_ARGS += \
-	--enable-quic \
 	--enable-reproducible-build \
 	--enable-lighty \
 	--enable-opensslall \
