@@ -8,7 +8,7 @@ make clean
 ./scripts/feeds update -a && \
 
 # Apply curl_wolfssl_quic_tls13.patch
-(patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && (./scripts/feeds update -a && cp bak_def_jetson.config .config))
+(patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && (./scripts/feeds update -a && cp bak_zapret_jetson.config .config))
 
 #cp build-fixes/feeds.nss.qca-nss-clients.Makefile feeds/nss/qca-nss-clients/Makefile && \
 #cp build-fixes/feeds.nss.qca-nss-ecm.Makefile feeds/nss/qca-nss-ecm/Makefile && \

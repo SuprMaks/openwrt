@@ -1,0 +1,62 @@
+--- feeds/packages/net/curl/Config.in
++++ feeds/packages/net/curl/Config.in
+@@ -107,12 +107,12 @@
+ 
+ config LIBCURL_NGHTTP3
+ 	bool "HTTP/3 protocol"
+-	depends on LIBCURL_OPENSSL
++	depends on LIBCURL_OPENSSL || LIBCURL_WOLFSSL
+ 	default n
+ 
+ config LIBCURL_NGTCP2
+ 	bool "QUIC protocol"
+-	depends on LIBCURL_OPENSSL
++	depends on LIBCURL_OPENSSL || LIBCURL_WOLFSSL
+ 	default n
+ 
+ comment "Miscellaneous"
+--- package/libs/wolfssl/Makefile
++++ package/libs/wolfssl/Makefile
+@@ -125,6 +125,7 @@
+ 
+ # --enable-stunnel needed for OpenSSL API compatibility bits
+ CONFIGURE_ARGS += \
++	--enable-quic \
+ 	--enable-reproducible-build \
+ 	--enable-lighty \
+ 	--enable-opensslall \
+--- ./feeds/packages/libs/ngtcp2/Makefile
++++ ./feeds/packages/libs/ngtcp2/Makefile
+@@ -22,7 +22,7 @@
+   CATEGORY:=Libraries
+   TITLE:=Implementation of QUIC protocol
+   URL:=https://nghttp2.org/ngtcp2
+-  DEPENDS:=+libnghttp3 +libopenssl
++  DEPENDS:=+libnghttp3 +libwolfssl
+ endef
+ 
+ define Package/libngtcp2/description
+@@ -31,6 +31,8 @@
+ endef
+ 
+ CMAKE_OPTIONS += -DENABLE_LIB_ONLY=ON
++CMAKE_OPTIONS += -DENABLE_WOLFSSL=ON
++#CONFIGURE_ARGS += --with-wolfssl
+ 
+ define Package/libngtcp2/install
+ 	$(INSTALL_DIR) $(1)/usr/lib
+--- feeds/packages/net/curl/Makefile
++++ feeds/packages/net/curl/Makefile
+@@ -165,6 +165,12 @@
+ 	$(call autoconf_bool,CONFIG_LIBCURL_UNIX_SOCKETS,unix-sockets) \
+ 	$(call autoconf_bool,CONFIG_LIBCURL_VERBOSE,verbose) \
+ 
++define Build/Prepare
++	$(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2.pc
++	$(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2_crypto_wolfssl.pc
++	$(call Build/Prepare/Default)
++endef
++
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(2)/bin $(1)/usr/bin $(1)/usr/include $(1)/usr/lib $(1)/usr/lib/pkgconfig
+ 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/curl-config $(1)/usr/bin/
