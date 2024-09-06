@@ -5,6 +5,7 @@
 make clean
 #make distclean
 #./scripts/feeds update -f nss && ./scripts/feeds install -a -p nss && \
+./scripts/feeds clean && \
 ./scripts/feeds update -a && \
 
 # Apply curl_wolfssl_quic_tls13.patch
