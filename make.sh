@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source build-fixes/config.sh
+source $(dirname -- "$0")/build-fixes/config.sh
 
 #make target/compile package/{qca-nss-gmac,qca-nss-drv,qca-nss-clients,qca-nss-ecm}/{clean,compile} V=s -j10
 #cp build-fixes/feeds.nss.qca-nss-clients.Makefile feeds/nss/qca-nss-clients/Makefile
