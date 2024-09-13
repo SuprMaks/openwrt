@@ -3,7 +3,7 @@
 base_conf() {
     # Base from https://downloads.openwrt.org/releases/23.05.4/targets/ipq806x/generic/config.buildinfo
     cp config/base_build_package_diff.config .config && \
-    cat config/base_build_env_diff.config >> .config && \
+    cat config/base_build_env_diff.config >> .config
 }
 
 summarize_conf() {    
