@@ -6,7 +6,7 @@ source $(dirname -- "$0")/build-fixes/config.sh
 #cp build-fixes/feeds.nss.qca-nss-clients.Makefile feeds/nss/qca-nss-clients/Makefile
 #cp build-fixes/feeds.nss.qca-nss-ecm.Makefile feeds/nss/qca-nss-ecm/Makefile
 
-make dirclean  && \
+make defconfig dirclean && \
 #make clean && \
 ./scripts/feeds clean
 
@@ -21,7 +21,7 @@ patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && ./script
 cp build-fixes/feeds.nss.qca-nss-clients.Makefile feeds/nss/qca-nss-clients/Makefile && \
 cp build-fixes/feeds.nss.qca-nss-ecm.Makefile feeds/nss/qca-nss-ecm/Makefile && \
 
-./scripts/feeds install -a && summarize_conf && \
+./scripts/feeds install -a && summarize_conf && make defconfig && \
 
 # Apply 990-add-nss-load-to-status.patch
 make package/luci-mod-status/{clean,prepare} QUILT=1 && \
@@ -32,7 +32,7 @@ cp build-fixes/package_feeds_luci_luci-mod-status_patches_990-add-nss-load-to-st
 #git apply build-fixes\930-bbr-plus-tsq.patch && \
 #cp build-fixes/package.network.services.dnsmasq.patches.900-strict-order-nxdomain.patch package/network/services/dnsmasq/patches/900-strict-order-nxdomain.patch && \
 
-make clean && \
+#make clean && \
 
 ./scripts/feeds install -a && summarize_conf && \
 
@@ -42,4 +42,13 @@ make clean && \
 ./scripts/getver.sh && \
 
 #make target/linux/compile -j $(($(nproc)+1)) && \
-make -j $(($(nproc)+1)) download world
+
+make defconfig menuconfig && \
+#make -j $(($(nproc)+1)) defconfig menuconfig download clean world
+#echo 'CONFIG_TARGET_SUFFIX="muslgnueabihf"' >> .config && \
+sed -i 's/CONFIG_TARGET_SUFFIX="muslgnueabi"/CONFIG_TARGET_SUFFIX="muslgnueabihf"/' .config && \
+#sed -i '/--disable-multilib \\/d' ./toolchain/gcc/common.mk && \
+make -j $(($(nproc)+1)) download clean world
+
+#make ./scripts/config/conf >/dev/null || { make ./scripts/config/conf; exit 1; } && \
+#make -j $(($(nproc)+1)) download clean world
