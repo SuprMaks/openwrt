@@ -31,7 +31,7 @@
    CATEGORY:=Libraries
    TITLE:=Implementation of QUIC protocol
    URL:=https://nghttp2.org/ngtcp2
--  DEPENDS:=+libnghttp3
+-  DEPENDS:=+libnghttp3 +libopenssl
 +  DEPENDS:=+libnghttp3 +libwolfssl
  endef
  
