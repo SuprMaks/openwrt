@@ -36,7 +36,7 @@ make defconfig menuconfig && \
 #echo 'CONFIG_TARGET_SUFFIX="muslgnueabihf"' >> .config && \
 sed -i 's/CONFIG_TARGET_SUFFIX="muslgnueabi"/CONFIG_TARGET_SUFFIX="muslgnueabihf"/' .config && \
 #sed -i '/--disable-multilib \\/d' ./toolchain/gcc/common.mk && \
-make -j $(($(nproc)+1)) download clean world
+make -j16 -l $(nproc) download clean world
 
 #make ./scripts/config/conf >/dev/null || { make ./scripts/config/conf; exit 1; } && \
 #make -j $(($(nproc)+1)) download clean world
