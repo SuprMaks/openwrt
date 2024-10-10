@@ -5,9 +5,9 @@
  			};
  
 +			backup-battery {
-+				maxim,backup-battery-charging-current = <100>;
-+				maxim,backup-battery-charging-voltage = <3000000>;
-+				maxim,backup-battery-output-resister = <100>;
++				maxim,backup-battery-charging-current = <50>;
++				maxim,backup-battery-charging-voltage = <3300000>;
++				maxim,backup-battery-output-resister = <1000>;
 +			};
 +
  			regulators {
