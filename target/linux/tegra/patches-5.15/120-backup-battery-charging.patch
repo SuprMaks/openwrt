@@ -108,3 +108,16 @@
  static int max77620_read_es_version(struct max77620_chip *chip)
  {
  	unsigned int val;
+--- a/drivers/mfd/max77620.c
++++ b/drivers/mfd/max77620.c
+@@ -645,6 +645,10 @@ static int max77620_probe(struct i2c_cli
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = max77620_init_backup_battery_charging(chip);
++	if (ret < 0)
++		return ret;
++
+ 	ret =  devm_mfd_add_devices(chip->dev, PLATFORM_DEVID_NONE,
+ 				    mfd_cells, n_mfd_cells, NULL, 0,
+ 				    regmap_irq_get_domain(chip->top_irq_data));
