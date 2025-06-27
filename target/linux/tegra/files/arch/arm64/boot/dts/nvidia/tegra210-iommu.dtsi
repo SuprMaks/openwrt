@@ -1,0 +1,71 @@
+
+ // #include "dt-bindings/memory/tegra-swgroup.h"
+ #include "dt-bindings/memory/tegra210-mc.h"
+
+ / {
+    smmu: iommu {
+		compatible = "nvidia,tegra210-smmu";
+		reg = <0x0 0x70019000 0x0 0x1000
+		       0x0 0x6000c000 0x0 0x1000>;
+		status = "okay";
+		#asids = <128>;
+		dma-window = <0x0 0x80000000 0x0 0x7ff00000>;
+		#iommu-cells = <1>;
+		swgid-mask = <0x00100fff 0xfffccdcf>;
+		#num-translation-enable = <5>;
+		#num-asid-security = <8>;
+
+		domains = <&ppcs_as TEGRA_SWGROUP_CELLS5(PPCS, PPCS1, PPCS2, SE, SE1)
+			   &gpu_as TEGRA_SWGROUP_CELLS(GPUB)
+			   &ape_as TEGRA_SWGROUP_CELLS(APE)
+			   &dc_as TEGRA_SWGROUP_CELLS2(DC, DC12)
+			   &dc_as TEGRA_SWGROUP_CELLS(DCB)
+			   &common_as TEGRA_SWGROUP_CELLS(AFI)
+			   &common_as TEGRA_SWGROUP_CELLS(SDMMC1A)
+			   &common_as TEGRA_SWGROUP_CELLS(SDMMC2A)
+			   &common_as TEGRA_SWGROUP_CELLS(SDMMC3A)
+			   &common_as TEGRA_SWGROUP_CELLS(SDMMC4A)
+			   &common_as TEGRA_SWGROUP_CELLS(AVPC)
+			   &common_as TEGRA_SWGROUP_CELLS(SMMU_TEST)
+			   &common_as 0xFFFFFFFF 0xFFFFFFFF>;
+
+		address-space-prop {
+			common_as: common {
+				iova-start = <0x0 0x80000000>;
+				iova-size = <0x0 0x7FF00000>;
+				num-pf-page = <0>;
+				gap-page = <1>;
+			};
+			ppcs_as: ppcs {
+				iova-start = <0x0 0x80000000>;
+				iova-size = <0x0 0x7FF00000>;
+				num-pf-page = <1>;
+				gap-page = <1>;
+			};
+			dc_as: dc {
+				iova-start = <0x0 0x00010000>;
+				iova-size = <0x0 0xFFFEFFFF>;
+				num-pf-page = <0>;
+				gap-page = <0>;
+			};
+			gpu_as: gpu {
+				iova-start = <0x0 0x00100000>;
+				iova-size = <0x3 0xFFEFFFFF>;
+				alignment = <0x20000>;
+				num-pf-page = <0>;
+				gap-page = <0>;
+			};
+			ape_as: ape {
+				iova-start = <0x0 0x70300000>;
+				iova-size = <0x0 0x8FC00000>;
+				num-pf-page = <0>;
+				gap-page = <1>;
+			};
+		};
+	};
+
+	smmu_test: smmu_test {
+		compatible = "nvidia,smmu_test";
+		iommus = <&smmu TEGRA_SWGROUP_SMMU_TEST>;
+	};
+ };
