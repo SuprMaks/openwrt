@@ -1,0 +1,236 @@
+--- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -392,7 +392,7 @@ static void handle_thermal_trip(struct t
+ 	monitor_thermal_zone(tz);
+ }
+ 
+-static void update_temperature(struct thermal_zone_device *tz)
++static int update_temperature(struct thermal_zone_device *tz)
+ {
+ 	int temp, ret;
+ 
+@@ -402,7 +402,7 @@ static void update_temperature(struct th
+ 			dev_warn(&tz->device,
+ 				 "failed to read out thermal zone (%d)\n",
+ 				 ret);
+-		return;
++		return ret;
+ 	}
+ 
+ 	mutex_lock(&tz->lock);
+@@ -413,6 +413,8 @@ static void update_temperature(struct th
+ 	trace_thermal_temperature(tz);
+ 
+ 	thermal_genl_sampling_temp(tz->id, temp);
++
++	return 0;
+ }
+ 
+ static void thermal_zone_device_init(struct thermal_zone_device *tz)
+@@ -497,7 +499,8 @@ void thermal_zone_device_update(struct t
+ 		      "'get_temp' ops set\n", __func__))
+ 		return;
+ 
+-	update_temperature(tz);
++	if (update_temperature(tz))
++		return;
+ 
+ 	thermal_zone_set_trips(tz);
+ 
+@@ -799,7 +802,7 @@ void print_bind_err_msg(struct thermal_z
+ 		tz->type, cdev->type, ret);
+ }
+ 
+-static void __bind(struct thermal_zone_device *tz, int mask,
++static void __bind(struct thermal_zone_device *tz, u64 mask,
+ 		   struct thermal_cooling_device *cdev,
+ 		   unsigned long *limits,
+ 		   unsigned int weight)
+@@ -807,7 +810,7 @@ static void __bind(struct thermal_zone_d
+ 	int i, ret;
+ 
+ 	for (i = 0; i < tz->num_trips; i++) {
+-		if (mask & (1 << i)) {
++		if (mask & (1ULL << i)) {
+ 			unsigned long upper, lower;
+ 
+ 			upper = THERMAL_NO_LIMIT;
+@@ -1060,13 +1063,13 @@ devm_thermal_of_cooling_device_register(
+ }
+ EXPORT_SYMBOL_GPL(devm_thermal_of_cooling_device_register);
+ 
+-static void __unbind(struct thermal_zone_device *tz, int mask,
++static void __unbind(struct thermal_zone_device *tz, u64 mask,
+ 		     struct thermal_cooling_device *cdev)
+ {
+ 	int i;
+ 
+ 	for (i = 0; i < tz->num_trips; i++)
+-		if (mask & (1 << i))
++		if (mask & (1ULL << i))
+ 			thermal_zone_unbind_cooling_device(tz, i, cdev);
+ }
+ 
+@@ -1192,7 +1195,7 @@ exit:
+  * IS_ERR*() helpers.
+  */
+ struct thermal_zone_device *
+-thermal_zone_device_register(const char *type, int num_trips, int mask,
++thermal_zone_device_register(const char *type, int num_trips, u64 mask,
+ 			     void *devdata, struct thermal_zone_device_ops *ops,
+ 			     struct thermal_zone_params *tzp, int passive_delay,
+ 			     int polling_delay)
+@@ -1435,6 +1438,37 @@ exit:
+ }
+ EXPORT_SYMBOL_GPL(thermal_zone_get_zone_by_name);
+ 
++/**
++* thermal_zone_get_zone_by_node() - search for a zone and returns its ref
++* @node: device node of the thermal zone
++*
++* When thermal zone is found with the passed device node, returns a reference
++* to it.
++*
++* Return: On success returns a reference to an unique thermal zone with
++* matching device node, an ERR_PTR otherwise (-EINVAL for invalid
++* paramenters, -ENODEV for not found).
++*/
++struct thermal_zone_device *
++thermal_zone_get_zone_by_node(struct device_node *node)
++{
++	struct thermal_zone_device *pos = NULL, *ref = ERR_PTR(-ENODEV);
++
++	if (!node)
++		return ERR_PTR(-EINVAL);
++
++	mutex_lock(&thermal_list_lock);
++	list_for_each_entry(pos, &thermal_tz_list, node)
++		if (node == pos->np) {
++			ref = pos;
++			break;
++		}
++	mutex_unlock(&thermal_list_lock);
++
++	return ref;
++}
++EXPORT_SYMBOL_GPL(thermal_zone_get_zone_by_node);
++
+ static int thermal_pm_notify(struct notifier_block *nb,
+ 			     unsigned long mode, void *_unused)
+ {
+--- a/drivers/thermal/thermal_core.h
++++ b/drivers/thermal/thermal_core.h
+@@ -129,7 +129,7 @@ void thermal_zone_set_trips(struct therm
+ void thermal_set_delay_jiffies(unsigned long *delay_jiffies, int delay_ms);
+ 
+ /* sysfs I/F */
+-int thermal_zone_create_device_groups(struct thermal_zone_device *, int);
++int thermal_zone_create_device_groups(struct thermal_zone_device *, u64);
+ void thermal_zone_destroy_device_groups(struct thermal_zone_device *);
+ void thermal_cooling_device_setup_sysfs(struct thermal_cooling_device *);
+ void thermal_cooling_device_destroy_sysfs(struct thermal_cooling_device *cdev);
+--- a/include/linux/thermal.h
++++ b/include/linux/thermal.h
+@@ -148,6 +148,7 @@ struct thermal_zone_device {
+ 	int id;
+ 	char type[THERMAL_NAME_LENGTH];
+ 	struct device device;
++	struct device_node *np;
+ 	struct attribute_group trips_attribute_group;
+ 	struct thermal_attr *trip_temp_attrs;
+ 	struct thermal_attr *trip_type_attrs;
+@@ -218,7 +219,7 @@ struct thermal_bind_params {
+ 	 * thermal zone and cdev, for a particular trip point.
+ 	 * See Documentation/driver-api/thermal/sysfs-api.rst for more information.
+ 	 */
+-	int trip_mask;
++	u64 trip_mask;
+ 
+ 	/*
+ 	 * This is an array of cooling state limits. Must have exactly
+@@ -363,7 +364,7 @@ void devm_thermal_zone_of_sensor_unregis
+ #endif
+ 
+ #ifdef CONFIG_THERMAL
+-struct thermal_zone_device *thermal_zone_device_register(const char *, int, int,
++struct thermal_zone_device *thermal_zone_device_register(const char *, int, u64,
+ 		void *, struct thermal_zone_device_ops *,
+ 		struct thermal_zone_params *, int, int);
+ void thermal_zone_device_unregister(struct thermal_zone_device *);
+@@ -398,7 +399,7 @@ int thermal_zone_device_disable(struct t
+ void thermal_zone_device_critical(struct thermal_zone_device *tz);
+ #else
+ static inline struct thermal_zone_device *thermal_zone_device_register(
+-	const char *type, int trips, int mask, void *devdata,
++	const char *type, int trips, u64 mask, void *devdata,
+ 	struct thermal_zone_device_ops *ops,
+ 	struct thermal_zone_params *tzp,
+ 	int passive_delay, int polling_delay)
+@@ -429,6 +430,9 @@ static inline void thermal_cooling_devic
+ static inline struct thermal_zone_device *thermal_zone_get_zone_by_name(
+ 		const char *name)
+ { return ERR_PTR(-ENODEV); }
++static inline struct thermal_zone_device *thermal_zone_get_zone_by_node(
++		struct device_node *node)
++{ return ERR_PTR(-ENODEV); }
+ static inline int thermal_zone_get_temp(
+ 		struct thermal_zone_device *tz, int *temp)
+ { return -ENODEV; }
+--- a/drivers/thermal/thermal_sysfs.c
++++ b/drivers/thermal/thermal_sysfs.c
+@@ -410,7 +410,7 @@ static const struct attribute_group *the
+  *
+  * Return: 0 on success, the proper error value otherwise.
+  */
+-static int create_trip_attrs(struct thermal_zone_device *tz, int mask)
++static int create_trip_attrs(struct thermal_zone_device *tz, u64 mask)
+ {
+ 	struct attribute **attrs;
+ 	int indx;
+@@ -473,7 +473,7 @@ static int create_trip_attrs(struct ther
+ 		tz->trip_temp_attrs[indx].attr.attr.mode = S_IRUGO;
+ 		tz->trip_temp_attrs[indx].attr.show = trip_point_temp_show;
+ 		if (IS_ENABLED(CONFIG_THERMAL_WRITABLE_TRIPS) &&
+-		    mask & (1 << indx)) {
++		    mask & (1ULL << indx)) {
+ 			tz->trip_temp_attrs[indx].attr.attr.mode |= S_IWUSR;
+ 			tz->trip_temp_attrs[indx].attr.store =
+ 							trip_point_temp_store;
+@@ -525,7 +525,7 @@ static void destroy_trip_attrs(struct th
+ }
+ 
+ int thermal_zone_create_device_groups(struct thermal_zone_device *tz,
+-				      int mask)
++				      u64 mask)
+ {
+ 	const struct attribute_group **groups;
+ 	int i, size, result;
+@@ -602,8 +602,8 @@ cur_state_store(struct device *dev, stru
+ 		const char *buf, size_t count)
+ {
+ 	struct thermal_cooling_device *cdev = to_cooling_device(dev);
+-	unsigned long state;
+-	int result;
++	unsigned long state, max_state;
++	int result, ret;
+ 
+ 	if (sscanf(buf, "%ld\n", &state) != 1)
+ 		return -EINVAL;
+@@ -617,6 +617,17 @@ cur_state_store(struct device *dev, stru
+ 
+ 	mutex_lock(&cdev->lock);
+ 
++	ret = cdev->ops->get_max_state(cdev, &max_state);
++	if (ret) {
++		mutex_unlock(&cdev->lock);
++		return ret;
++	}
++
++	if (state > max_state) {
++		mutex_unlock(&cdev->lock);
++		return -EINVAL;
++	}
++
+ 	result = cdev->ops->set_cur_state(cdev, state);
+ 	if (!result)
+ 		thermal_cooling_device_stats_update(cdev, state);

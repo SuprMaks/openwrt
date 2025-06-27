@@ -1904,7 +1904,7 @@ define KernelPackage/usb-xhci-tegra
   KCONFIG:= \
 	  CONFIG_USB_XHCI_TEGRA \
 	  CONFIG_PHY_TEGRA_XUSB=m \
-	  CONFIG_USB_CHIPIDEA_TEGRA=y
+    $(if $(CONFIG_ARCH_TEGRA_210_SOC),,CONFIG_USB_CHIPIDEA_TEGRA=y)
   HIDDEN:=1
   FILES:= \
 	  $(LINUX_DIR)/drivers/usb/host/xhci-tegra.ko \

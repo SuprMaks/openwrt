@@ -15,7 +15,7 @@
  				in-ldo2-supply = <&vdd_3v3_sys>;
 --- /drivers/mfd/max77620.c
 +++ /drivers/mfd/max77620.c
-@@ -460,6 +460,92 @@ skip_fps:
+@@ -461,6 +461,92 @@ skip_fps:
  	return 0;
  }
  
@@ -110,7 +110,7 @@
  	unsigned int val;
 --- a/drivers/mfd/max77620.c
 +++ b/drivers/mfd/max77620.c
-@@ -645,6 +645,10 @@ static int max77620_probe(struct i2c_cli
+@@ -646,6 +646,10 @@ static int max77620_probe(struct i2c_cli
  	if (ret < 0)
  		return ret;
  

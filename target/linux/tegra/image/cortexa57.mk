@@ -44,6 +44,7 @@ define Device/jetson_nano_devkit
   DEVICE_MODEL := Jetson Nano
   DEVICE_VARIANT := Development Kit
   DEVICE_DTS := tegra210-p3450-0000
+  # DEVICE_DTS := tegra210-p3448-0000-p3449-0000-a02
   DEVICE_PACKAGES := kmod-r8169 wpad-basic-mbedtls kmod-usb-storage kmod-usb-xhci-tegra t210-vic-firmware gm20b-firmware
 endef
 TARGET_DEVICES += jetson_nano_devkit
