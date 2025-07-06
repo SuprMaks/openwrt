@@ -1,0 +1,17 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -1660,6 +1660,14 @@
+ 			cpu-sleep {
+ 				status = "okay";
+ 			};
++
++			CC6: cc6 {
++				compatible = "arm,idle-state";
++				arm,psci-suspend-param = <0x40000010>;
++				wakeup-latency-us = <230>;
++				min-residency-us = <10000>;
++				idle-state-name = "cc6-cluster-powergated";
++			};
+ 		};
+ 	};
+ 

@@ -1,0 +1,106 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -1668,7 +1668,7 @@
+ 		pwms = <&pwm 3 45334>;
+ 		fan-supply = <&vdd_fan>;
+ 
+-		cooling-levels = <0 64 128 255>;
++		cooling-levels = <0 25 37 45 88 180 255>;
+ 		#cooling-cells = <2>;
+ 	};
+ 
+@@ -1681,39 +1681,83 @@
+ 					type = "critical";
+ 				};
+ 
+-				cpu_trip_hot: hot {
+-					temperature = <70000>;
+-					hysteresis = <2000>;
++				cpu_trip_overheat: overheat {
++					temperature = <66000>;
++					hysteresis = <4000>;
+ 					type = "hot";
+ 				};
+ 
+-				cpu_trip_active: active {
+-					temperature = <50000>;
+-					hysteresis = <2000>;
++				cpu_trip_hot: hot {
++					temperature = <61000>;
++					hysteresis = <4000>;
++					type = "active";
++				};
++
++				cpu_trip_hotting: hotting {
++					temperature = <56000>;
++					hysteresis = <4000>;
++					type = "active";
++				};
++
++				cpu_trip_warmest: warmest {
++					temperature = <51000>;
++					hysteresis = <4000>;
++					type = "active";
++				};
++
++				cpu_trip_warm: warm {
++					temperature = <46000>;
++					hysteresis = <4000>;
++					type = "active";
++				};
++
++				cpu_trip_warming: warming {
++					temperature = <42000>;
++					hysteresis = <4000>;
+ 					type = "active";
+ 				};
+ 
+ 				cpu_trip_passive: passive {
+ 					temperature = <30000>;
+-					hysteresis = <2000>;
++					hysteresis = <4000>;
+ 					type = "passive";
+ 				};
+ 			};
+ 
+ 			cooling-maps {
+ 				cpu-critical {
+-					cooling-device = <&fan 3 3>;
++					cooling-device = <&fan 8 8>;
+ 					trip = <&cpu_trip_critical>;
+ 				};
+ 
++				cpu-overheat {
++					cooling-device = <&fan 8 8>;
++					trip = <&cpu_trip_overheat>;
++				};
++
+ 				cpu-hot {
+-					cooling-device = <&fan 2 2>;
++					cooling-device = <&fan 5 5>;
+ 					trip = <&cpu_trip_hot>;
+ 				};
+ 
+-				cpu-active {
++				cpu-hotting {
++					cooling-device = <&fan 4 4>;
++					trip = <&cpu_trip_hotting>;
++				};
++
++				cpu-warmest {
++					cooling-device = <&fan 3 3>;
++					trip = <&cpu_trip_warmest>;
++				};
++
++				cpu-warm {
++					cooling-device = <&fan 2 2>;
++					trip = <&cpu_trip_warm>;
++				};
++
++				cpu-warming {
+ 					cooling-device = <&fan 1 1>;
+-					trip = <&cpu_trip_active>;
++					trip = <&cpu_trip_warming>;
+ 				};
+ 
+ 				cpu-passive {
