@@ -128,11 +128,12 @@ CONFIGURE_ARGS += \
 	--enable-lighty \
 	--enable-opensslall \
 	--enable-opensslextra \
+	--enable-earlydata \
 	--enable-sni \
 	--enable-stunnel \
 	--enable-altcertchains \
 	--$(if $(CONFIG_PACKAGE_libwolfssl-benchmark),enable,disable)-crypttests \
-	--disable-examples \
+	--enable-examples \
 	--disable-jobserver \
 	--$(if $(CONFIG_IPV6),enable,disable)-ipv6 \
 	--$(if $(CONFIG_WOLFSSL_HAS_AES_CCM),enable,disable)-aesccm \

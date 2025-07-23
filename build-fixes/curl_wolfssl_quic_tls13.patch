@@ -36,12 +36,18 @@
  endef
  
  define Package/libngtcp2/description
-@@ -31,6 +31,8 @@
+@@ -31,6 +31,14 @@
  endef
  
  CMAKE_OPTIONS += -DENABLE_LIB_ONLY=ON
 +CMAKE_OPTIONS += -DENABLE_WOLFSSL=ON
-+#CONFIGURE_ARGS += --with-wolfssl
++CONFIGURE_ARGS += --with-wolfssl
++
++define Build/InstallDev
++	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libngtcp2.pc $(1)/usr/lib/pkgconfig/libngtcp2.pc
++	$(SED) 's,/usr/include,$$$${prefix}/include,g' $(1)/usr/lib/pkgconfig/libngtcp2.pc
++endef
  
  define Package/libngtcp2/install
  	$(INSTALL_DIR) $(1)/usr/lib
@@ -52,11 +58,34 @@
  	$(call autoconf_bool,CONFIG_LIBCURL_VERBOSE,verbose) \
  
 +define Build/Prepare
-+	$(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2.pc
-+	$(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2_crypto_wolfssl.pc
++	[ -n "$(CONFIG_LIBCURL_NGTCP2)" && -n "$(CONFIG_LIBCURL_WOLFSSL)" ] && $(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2.pc && \
++	$(SED) '/Cflags/d' $(STAGING_DIR)/usr/lib/pkgconfig/libngtcp2_crypto_wolfssl.pc || true
 +	$(call Build/Prepare/Default)
 +endef
 +
  define Build/InstallDev
  	$(INSTALL_DIR) $(2)/bin $(1)/usr/bin $(1)/usr/include $(1)/usr/lib $(1)/usr/lib/pkgconfig
  	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/curl-config $(1)/usr/bin/
+--- package/libs/wolfssl/Makefile
++++ package/libs/wolfssl/Makefile
+@@ -132,7 +132,8 @@ CONFIGURE_ARGS += \
+ 	--enable-stunnel \
+ 	--enable-altcertchains \
+ 	--$(if $(CONFIG_PACKAGE_libwolfssl-benchmark),enable,disable)-crypttests \
+-	--disable-examples \
++	--enable-examples \
++	--enable-earlydata \
+ 	--disable-jobserver \
+ 	--$(if $(CONFIG_IPV6),enable,disable)-ipv6 \
+ 	--$(if $(CONFIG_WOLFSSL_HAS_AES_CCM),enable,disable)-aesccm \
+--- ./feeds/packages/libs/ngtcp2/Makefile
++++ ./feeds/packages/libs/ngtcp2/Makefile
+@@ -17,6 +17,8 @@ CMAKE_INSTALL:=1
+ include $(INCLUDE_DIR)/package.mk
+ include $(INCLUDE_DIR)/cmake.mk
+ 
++TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
++
+ define Package/libngtcp2
+   SECTION:=libs
+   CATEGORY:=Libraries

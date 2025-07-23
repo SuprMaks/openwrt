@@ -66,12 +66,12 @@
  			cooling-maps {
  				cpu-critical {
 -					cooling-device = <&fan 3 3>;
-+					cooling-device = <&fan 8 8>;
++					cooling-device = <&fan 6 6>;
  					trip = <&cpu_trip_critical>;
  				};
  
 +				cpu-overheat {
-+					cooling-device = <&fan 8 8>;
++					cooling-device = <&fan 6 6>;
 +					trip = <&cpu_trip_overheat>;
 +				};
 +
