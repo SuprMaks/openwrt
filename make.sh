@@ -33,7 +33,11 @@ summarize_conf && \
 #cp build-fixes/target.linux.ipq806x.patches-5.15.999-998-bbr-plus-tsq.patch target/linux/ipq806x/patches-5.15/999-998-bbr-plus-tsq.patch && \
 #git apply build-fixes\930-bbr-plus-tsq.patch && \
 #cp build-fixes/package.network.services.dnsmasq.patches.900-strict-order-nxdomain.patch package/network/services/dnsmasq/patches/900-strict-order-nxdomain.patch && \
-cp build-fixes/package.network.utils.iproute2.patches.900-bbr-v3.patch package/network/utils/iproute2/patches/900-bbr-v3.patch && \
+#cp build-fixes/package.network.utils.iproute2.patches.900-bbr-v3.patch package/network/utils/iproute2/patches/900-bbr-v3.patch && \
+#cp build-fixes/feeds.packages.lang.rust.patches.900-rust-buildfix.patch feeds/packages/lang/rust/patches/900-rust-buildfix.patch && \
+#mkdir feeds/packages/net/ntpd/patches && cp build-fixes/900-package-ntp-fix-build-with-gcc-14.diff feeds/packages/net/ntpd/patches/900-package-ntp-fix-build-with-gcc-14.patch && \
+#make package/feeds/packages/ntpd/{clean,prepare} && \
+git apply build-fixes/feeds.packages.lang.rust.patches.900-rust-buildfix.patch && \
 
 #make clean && \
 

@@ -31,26 +31,20 @@
    CATEGORY:=Libraries
    TITLE:=Implementation of QUIC protocol
    URL:=https://nghttp2.org/ngtcp2
--  DEPENDS:=+libnghttp3 +libopenssl
+-  DEPENDS:=+libnghttp3
 +  DEPENDS:=+libnghttp3 +libwolfssl
  endef
  
  define Package/libngtcp2/description
-@@ -31,6 +31,14 @@
+@@ -31,6 +31,8 @@
  endef
  
  CMAKE_OPTIONS += -DENABLE_LIB_ONLY=ON
 +CMAKE_OPTIONS += -DENABLE_WOLFSSL=ON
 +CONFIGURE_ARGS += --with-wolfssl
-+
-+define Build/InstallDev
-+	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
-+	$(CP) $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/libngtcp2.pc $(1)/usr/lib/pkgconfig/libngtcp2.pc
-+	$(SED) 's,/usr/include,$$$${prefix}/include,g' $(1)/usr/lib/pkgconfig/libngtcp2.pc
-+endef
  
- define Package/libngtcp2/install
- 	$(INSTALL_DIR) $(1)/usr/lib
+ define Build/InstallDev
+	$(call Build/InstallDev/cmake,$(1))
 --- feeds/packages/net/curl/Makefile
 +++ feeds/packages/net/curl/Makefile
 @@ -165,6 +165,12 @@
@@ -72,8 +66,7 @@
  	--enable-stunnel \
  	--enable-altcertchains \
  	--$(if $(CONFIG_PACKAGE_libwolfssl-benchmark),enable,disable)-crypttests \
--	--disable-examples \
-+	--enable-examples \
+	--disable-examples \
 +	--enable-earlydata \
  	--disable-jobserver \
  	--$(if $(CONFIG_IPV6),enable,disable)-ipv6 \
@@ -89,3 +82,14 @@
  define Package/libngtcp2
    SECTION:=libs
    CATEGORY:=Libraries
+--- ./feeds/packages/libs/ngtcp2/Makefile
++++ ./feeds/packages/libs/ngtcp2/Makefile
+@@ -38,6 +38,8 @@ CONFIGURE_ARGS += --with-wolfssl
+ 
+ define Build/InstallDev
+ 	$(call Build/InstallDev/cmake,$(1))
++	$(SED) 's,/usr/include,$$$${prefix}/include,g' $(1)/usr/lib/pkgconfig/libngtcp2_crypto_wolfssl.pc
++	$(SED) 's,/usr/lib,$$$${exec_prefix}/lib,g' $(1)/usr/lib/pkgconfig/libngtcp2_crypto_wolfssl.pc
+ 	$(SED) 's,/usr/include,$$$${prefix}/include,g' $(1)/usr/lib/pkgconfig/libngtcp2.pc
+ 	$(SED) 's,/usr/lib,$$$${exec_prefix}/lib,g' $(1)/usr/lib/pkgconfig/libngtcp2.pc
+ endef
