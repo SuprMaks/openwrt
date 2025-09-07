@@ -7,6 +7,7 @@ mkdir -p ./build_dir/malformed_packages
 git clone https://github.com/gSpotx2f/luci-app-temp-status.git build_dir/malformed_packages/luci-app-temp-status && \
 git clone https://github.com/gSpotx2f/luci-app-cpu-perf.git build_dir/malformed_packages/luci-app-cpu-perf && \
 git clone https://github.com/gSpotx2f/luci-app-cpu-status.git build_dir/malformed_packages/luci-app-cpu-status && \
+git clone https://github.com/zerolabnet/SSClash.git build_dir/malformed_packages/luci-app-ssclash && \
 #git clone https://github.com/muink/luci-app-natmapt.git build_dir/malformed_packages/luci-app-natmapt && \
 
 #make defconfig dirclean && \
@@ -51,7 +52,7 @@ make defconfig menuconfig && \
 sed -i 's/CONFIG_TARGET_SUFFIX="muslgnueabi"/CONFIG_TARGET_SUFFIX="muslgnueabihf"/' .config && \
 #sed -i '/--disable-multilib \\/d' ./toolchain/gcc/common.mk && \
 grep -q 'CONFIG_ATH10K_LEDS=y' .config || \
-make -j16 -l $(nproc) download world
+GOPROXY=https://goproxy.cn make -j16 -l $(nproc) download world
 
 #make ./scripts/config/conf >/dev/null || { make ./scripts/config/conf; exit 1; } && \
 #make -j $(($(nproc)+1)) download clean world
