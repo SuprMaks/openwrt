@@ -20,6 +20,8 @@ make defconfig && \
 #./scripts/feeds update -f nss && ./scripts/feeds install -a -p nss && \
 ./scripts/feeds update -a && \
 
+cp build-fixes/feeds.packages.net.unbound.patches.011-block_AAAA.patch feeds/packages/net/unbound/patches/011-block_AAAA.patch &&
+
 # Apply curl_wolfssl_quic_tls13.patch
 patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && ./scripts/feeds update -a
 
