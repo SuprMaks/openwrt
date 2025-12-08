@@ -1,0 +1,185 @@
+#--- a/Documentation/networking/ip-sysctl.rst
+#+++ b/Documentation/networking/ip-sysctl.rst
+#@@ -982,8 +982,33 @@ tcp_limit_output_bytes - INTEGER
+# 	limits the number of bytes on qdisc or device to reduce artificial
+# 	RTT/cwnd and reduce bufferbloat.
+# 
+#+	The overall limit is given by the following (rate is in B/ms):
+#+	limit = min(output_bytes, max(output_pkt * mss, output_ms * rate)
+#+	Set to -1 to unconditionally disable TSQ, regardless of the
+#+	values of tcp_limit_output_ms and tcp_limit_output_pkt.
+#+
+# 	Default: 1048576 (16 * 65536)
+# 
+#+tcp_limit_output_ms - UNSIGNED INTEGER
+#+	Controls TCP Small Queue limit per TCP socket, under a time point
+#+	of view. Given a transmission rate, limit the bytes on qdisc or
+#+	device to a value that can be transmitted approximately in the
+#+	time provided in this parameter at the given rate. This limit
+#+	is doubled for retransmissions. The overall limit is given by
+#+	the following (rate is in B/ms):
+#+	limit = min(output_bytes, max(output_pkt * mss, output_ms * rate)
+#+
+#+	Default: 1
+#+
+#+tcp_limit_output_pkt - UNSIGNED INTEGER
+#+	Controls TCP Small Queue limit per tcp socket.
+#+	tcp_limit_output_pkt limits the number of packets queued in
+#+	qdisc/device. This limit is doubled for retransmissions.
+#+	The overall limit is given by the following (rate is in B/ms):
+#+	limit = min(output_bytes, max(output_pkt * mss, output_ms * rate)
+#+
+#+	Default: 2
+#+
+# tcp_challenge_ack_limit - INTEGER
+# 	Limits number of Challenge ACK sent per second, as recommended
+# 	in RFC 5961 (Improving TCP's Robustness to Blind In-Window Attacks)
+--- a/net/ipv4/sysctl_net_ipv4.c
++++ b/net/ipv4/sysctl_net_ipv4.c
+@@ -1285,6 +1285,20 @@ static struct ctl_table ipv4_net_table[]
+ 		.proc_handler	= proc_dointvec
+ 	},
+ 	{
++		.procname	= "tcp_limit_output_ms",
++		.data		= &init_net.ipv4.sysctl_tcp_limit_output_ms,
++		.maxlen		= sizeof(unsigned int),
++		.mode		= 0644,
++		.proc_handler	= proc_douintvec
++	},
++	{
++		.procname	= "tcp_limit_output_pkt",
++		.data		= &init_net.ipv4.sysctl_tcp_limit_output_pkt,
++		.maxlen		= sizeof(unsigned int),
++		.mode		= 0644,
++		.proc_handler	= proc_douintvec
++	},
++	{
+ 		.procname	= "tcp_challenge_ack_limit",
+ 		.data		= &init_net.ipv4.sysctl_tcp_challenge_ack_limit,
+ 		.maxlen		= sizeof(int),
+--- a/net/ipv4/tcp_output.c
++++ b/net/ipv4/tcp_output.c
+@@ -2501,11 +2501,16 @@ static bool tcp_pacing_check(struct sock
+ static bool tcp_small_queue_check(struct sock *sk, const struct sk_buff *skb,
+ 				  unsigned int factor)
+ {
+-	unsigned long limit;
++	unsigned int limit;
+ 
+ 	limit = max_t(unsigned long,
+ 		      2 * skb->truesize,
+ 		      sk->sk_pacing_rate >> READ_ONCE(sk->sk_pacing_shift));
++	if (READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_limit_output_bytes) < 0)
++		return false;
++
++	limit = READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_limit_output_ms) * (sk->sk_pacing_rate >> 10);
++	limit = max(READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_limit_output_pkt) * skb->truesize, limit);
+ 	if (sk->sk_pacing_status == SK_PACING_NONE)
+ 		limit = min_t(unsigned long, limit,
+ 			      READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_limit_output_bytes));
+--- a/net/ipv4/tcp_ipv4.c
++++ b/net/ipv4/tcp_ipv4.c
+@@ -3171,6 +3171,10 @@ static int __net_init tcp_sk_init(struct
+ 	net->ipv4.sysctl_tcp_adv_win_scale = 1;
+ 	net->ipv4.sysctl_tcp_frto = 2;
+ 	net->ipv4.sysctl_tcp_moderate_rcvbuf = 1;
++	/* Default TSQ limit of 1 ms of data, if the rate is set */
++	net->ipv4.sysctl_tcp_limit_output_ms = 1;
++	/* Default TSQ limit of 2 packets */
++	net->ipv4.sysctl_tcp_limit_output_pkt = 2;
+ 	/* This limits the percentage of the congestion window which we
+ 	 * will allow a single TSO frame to consume.  Building TSO frames
+ 	 * which are too large can cause TCP streams to be bursty.
+--- a/include/net/netns/ipv4.h
++++ b/include/net/netns/ipv4.h
+@@ -155,6 +155,8 @@ struct netns_ipv4 {
+ 	u8 sysctl_tcp_moderate_rcvbuf;
+ 	u8 sysctl_tcp_tso_win_divisor;
+ 	u8 sysctl_tcp_workaround_signed_windows;
++	unsigned int sysctl_tcp_limit_output_ms;
++	unsigned int sysctl_tcp_limit_output_pkt;
+ 	int sysctl_tcp_limit_output_bytes;
+ 	int sysctl_tcp_challenge_ack_limit;
+ 	int sysctl_tcp_min_rtt_wlen;
+--- a/net/ipv4/tcp_bbr.c
++++ b/net/ipv4/tcp_bbr.c
+@@ -201,6 +201,70 @@ static const u32 bbr_extra_acked_max_us
+ 
+ static void bbr_check_probe_rtt_done(struct sock *sk);
+ 
++int tcp_bbr_gain_probe_y1 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y1, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y1, "BBR probe state gain factor Y1");
++int tcp_bbr_gain_probe_y2 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y2, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y2, "BBR probe state gain factor Y2");
++int tcp_bbr_gain_probe_y3 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y3, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y3, "BBR probe state gain factor Y3");
++int tcp_bbr_gain_probe_y4 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y4, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y4, "BBR probe state gain factor Y4");
++int tcp_bbr_gain_probe_y5 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y5, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y5, "BBR probe state gain factor Y5");
++int tcp_bbr_gain_probe_y6 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y6, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y6, "BBR probe state gain factor Y6");
++int tcp_bbr_gain_probe_y7 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y7, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y7, "BBR probe state gain factor Y7");
++int tcp_bbr_gain_probe_y8 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y8, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y8, "BBR probe state gain factor Y8");
++int tcp_bbr_gain_probe_y9 __read_mostly = 8;
++module_param(tcp_bbr_gain_probe_y9, int, 0644);
++MODULE_PARM_DESC(tcp_bbr_gain_probe_y9, "BBR probe state gain factor Y9");
++
++static int bbr_get_gain_probe (unsigned int state)
++{
++	int modifier = 0;
++	switch (state)
++	{
++	case 0:
++		modifier = tcp_bbr_gain_probe_y1 / 8;
++		break;
++	case 1:
++		modifier = tcp_bbr_gain_probe_y2 / 8;
++		break;
++	case 2:
++		modifier = tcp_bbr_gain_probe_y3 / 8;
++		break;
++	case 3:
++		modifier = tcp_bbr_gain_probe_y4 / 8;
++		break;
++	case 4:
++		modifier = tcp_bbr_gain_probe_y5 / 8;
++		break;
++	case 5:
++		modifier = tcp_bbr_gain_probe_y6 / 8;
++		break;
++	case 6:
++		modifier = tcp_bbr_gain_probe_y7 / 8;
++		break;
++	case 7:
++		modifier = tcp_bbr_gain_probe_y8 / 8;
++		break;
++	case 8:
++		modifier = tcp_bbr_gain_probe_y9 / 8;
++		break;
++	}
++	return bbr_pacing_gain[state] * modifier;
++}
++
+ /* Do we estimate that STARTUP filled the pipe? */
+ static bool bbr_full_bw_reached(const struct sock *sk)
+ {
+@@ -997,7 +1061,7 @@ static void bbr_update_gains(struct sock
+ 	case BBR_PROBE_BW:
+ 		bbr->pacing_gain = (bbr->lt_use_bw ?
+ 				    BBR_UNIT :
+-				    bbr_pacing_gain[bbr->cycle_idx]);
++				    bbr_get_gain_probe(bbr->cycle_idx));
+ 		bbr->cwnd_gain	 = bbr_cwnd_gain;
+ 		break;
+ 	case BBR_PROBE_RTT:

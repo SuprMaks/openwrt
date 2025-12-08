@@ -1,0 +1,11 @@
+--- "a/src/forward.c"
++++ "b/src/forward.c"
+@@ -1152,7 +1152,7 @@ void reply_query(int fd, time_t now)
+   
+   /* Note: if we send extra options in the EDNS0 header, we can't recreate
+      the query from the reply. */
+-  if ((RCODE(header) == REFUSED || RCODE(header) == SERVFAIL) &&
++  if (RCODE(header) == REFUSED || RCODE(header) == SERVFAIL || (RCODE(header) == NXDOMAIN && option_bool(OPT_ORDER) && ++c != last) &&
+       forward->forwardall == 0 &&
+       !(forward->flags & FREC_HAS_EXTRADATA))
+     /* for broken servers, attempt to send to another one. */

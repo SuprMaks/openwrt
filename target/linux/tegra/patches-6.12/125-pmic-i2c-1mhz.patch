@@ -1,0 +1,11 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -169,7 +169,7 @@
+ 
+ 	i2c@7000d000 {
+ 		status = "okay";
+-		clock-frequency = <400000>;
++		clock-frequency = <1000000>;
+ 
+ 		pmic: pmic@3c {
+ 			compatible = "maxim,max77620";

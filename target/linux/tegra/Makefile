@@ -4,24 +4,15 @@
 
 include $(TOPDIR)/rules.mk
 
-ARCH := arm
-BOARD := tegra
-BOARDNAME := NVIDIA Tegra
-FEATURES := audio boot-part display ext4 fpu gpio pci pcie rootfs-part rtc squashfs usb
-CPU_TYPE := cortex-a9
-CPU_SUBTYPE := vfpv3-d16
-SUBTARGETS := generic
+BOARD:=tegra
+BOARDNAME:=NVIDIA Tegra
+FEATURES:=audio boot-part display ext4 fpu gpio pwm pci pcie rootfs-part rtc squashfs usb usb_support usbgadget usb_xhci_hcd targz
+SUBTARGETS:=cortexa9 cortexa57
 
 KERNEL_PATCHVER := 6.12
 
 include $(INCLUDE_DIR)/target.mk
 
-KERNELNAME := zImage dtbs
-
 DEFAULT_PACKAGES += e2fsprogs mkf2fs partx-utils
-
-define Target/Description
-	Build firmware image for NVIDIA Tegra SoC devices.
-endef
 
 $(eval $(call BuildTarget))

@@ -1,0 +1,11 @@
+--- a/drivers/memory/tegra/mc.c
++++ b/drivers/memory/tegra/mc.c
+@@ -774,7 +774,7 @@ static int tegra_mc_probe(struct platfor
+ 
+ 		mc_writel(mc, mc->soc->intmask, MC_INTMASK);
+ 
+-		err = devm_request_irq(&pdev->dev, mc->irq, mc->soc->ops->handle_irq, 0,
++		err = devm_request_irq(&pdev->dev, mc->irq, mc->soc->ops->handle_irq, IRQF_SHARED,
+ 				       dev_name(&pdev->dev), mc);
+ 		if (err < 0) {
+ 			dev_err(&pdev->dev, "failed to request IRQ#%u: %d\n", mc->irq,

@@ -1,0 +1,16 @@
+--- a/include/dt-bindings/soc/tegra-pmc.h
++++ b/include/dt-bindings/soc/tegra-pmc.h
+@@ -13,4 +13,13 @@
+ 
+ #define TEGRA_PMC_CLK_MAX		4
+ 
++#define PMC_WAKE_TYPE_GPIO	0
++#define PMC_WAKE_TYPE_EVENT	1
++
++#define PMC_TRIGGER_TYPE_NONE		0
++#define PMC_TRIGGER_TYPE_RISING		1
++#define PMC_TRIGGER_TYPE_FALLING	2
++#define PMC_TRIGGER_TYPE_HIGH		4
++#define PMC_TRIGGER_TYPE_LOW		8
++
+ #endif	/* _DT_BINDINGS_SOC_TEGRA_PMC_H */

@@ -1,0 +1,10 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -20,6 +20,7 @@
+ 
+ 	chosen {
+ 		stdout-path = "serial0:115200n8";
++		bootargs = "console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x70006000";
+ 	};
+ 
+ 	memory@80000000 {

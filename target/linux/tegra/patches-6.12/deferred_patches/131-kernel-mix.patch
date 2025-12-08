@@ -1,0 +1,416 @@
+--- a/arch/arm64/include/asm/assembler.h
++++ b/arch/arm64/include/asm/assembler.h
+@@ -56,7 +56,19 @@
+ 	.endm
+ 
+ /*
+- * Save/restore interrupts.
++ * Save/disable and restore interrupts.
++ */
++	.macro	save_and_disable_irqs, olddaif
++	mrs	\olddaif, daif
++	msr     daifset, #2
++	.endm
++
++	.macro	restore_irqs, olddaif
++	msr	daif, \olddaif
++	.endm
++
++/*
++ * Enable and disable debug exceptions.
+  */
+ 	.macro	save_and_disable_irq, flags
+ 	mrs	\flags, daif
+--- a/arch/arm64/include/asm/irqflags.h
++++ b/arch/arm64/include/asm/irqflags.h
+@@ -119,15 +119,17 @@ static inline unsigned long arch_local_i
+  */
+ static inline void arch_local_irq_restore(unsigned long flags)
+ {
+-	asm volatile(ALTERNATIVE(
+-		"msr	daif, %0",
+-		__msr_s(SYS_ICC_PMR_EL1, "%0"),
+-		ARM64_HAS_IRQ_PRIO_MASKING)
+-		:
+-		: "r" (flags)
+-		: "memory");
++	if (!arch_irqs_disabled_flags(flags)) {
++		asm volatile(ALTERNATIVE(
++			"msr	daifclr, #2		// arch_local_irq_enable",
++			__msr_s(SYS_ICC_PMR_EL1, "%0"),
++			ARM64_HAS_IRQ_PRIO_MASKING)
++			:
++			: "r" ((unsigned long) GIC_PRIO_IRQON)
++			: "memory");
+ 
+-	pmr_sync();
++		pmr_sync();
++	}
+ }
+ 
+ #endif /* __ASM_IRQFLAGS_H */
+--- a/arch/arm64/kernel/cpufeature.c
++++ b/arch/arm64/kernel/cpufeature.c
+@@ -1000,12 +1000,20 @@ static int check_update_ftr_reg(u32 sys_
+ {
+ 	struct arm64_ftr_reg *regp = get_arm64_ftr_reg(sys_id);
+ 
++	u32 midr = read_cpuid_id();
++	const struct midr_range range = MIDR_ALL_VERSIONS(MIDR_NVIDIA_DENVER);
++
+ 	if (!regp)
+ 		return 0;
+ 
+ 	update_cpu_ftr_reg(regp, val);
+ 	if ((boot & regp->strict_mask) == (val & regp->strict_mask))
+ 		return 0;
++
++	if (is_midr_in_range(midr, &range) &&
++		(sys_id == SYS_ID_AA64DFR0_EL1 || sys_id == SYS_ID_DFR0_EL1 || sys_id == SYS_CTR_EL0))
++		return 0;
++
+ 	pr_warn("SANITY CHECK: Unexpected variation in %s. Boot CPU: %#016llx, CPU%d: %#016llx\n",
+ 			regp->name, boot, cpu, val);
+ 	return 1;
+@@ -2927,6 +2935,7 @@ unsigned long cpu_get_elf_hwcap(void)
+ 	 */
+ 	return lower_32_bits(elf_hwcap);
+ }
++EXPORT_SYMBOL_GPL(cpu_get_elf_hwcap);
+ 
+ unsigned long cpu_get_elf_hwcap2(void)
+ {
+--- a/arch/arm64/kernel/smp.c
++++ b/arch/arm64/kernel/smp.c
+@@ -658,6 +658,10 @@ static void __init of_parse_and_init_cpu
+ 	for_each_of_cpu_node(dn) {
+ 		u64 hwid = of_get_cpu_mpidr(dn);
+ 
++		/* Check to see if the cpu is disabled */
++		if (!of_device_is_available(dn))
++			goto next;
++
+ 		if (hwid == INVALID_HWID)
+ 			goto next;
+ 
+--- a/arch/arm64/kernel/time.c
++++ b/arch/arm64/kernel/time.c
+@@ -31,6 +31,7 @@
+ #include <asm/thread_info.h>
+ #include <asm/stacktrace.h>
+ #include <asm/paravirt.h>
++#include <asm/mach/time.h>
+ 
+ unsigned long profile_pc(struct pt_regs *regs)
+ {
+@@ -51,6 +52,34 @@ unsigned long profile_pc(struct pt_regs
+ }
+ EXPORT_SYMBOL(profile_pc);
+ 
++static void dummy_clock_access(struct timespec64 *ts)
++{
++	ts->tv_sec = 0;
++	ts->tv_nsec = 0;
++}
++
++static clock_access_fn __read_persistent_clock = dummy_clock_access;
++static clock_access_fn __read_boot_clock = dummy_clock_access;
++
++void read_persistent_clock(struct timespec64 *ts)
++{
++	__read_persistent_clock(ts);
++}
++
++int __init register_persistent_clock(clock_access_fn read_persistent)
++{
++	/* Only allow the clockaccess functions to be registered once */
++	if (__read_persistent_clock == dummy_clock_access &&
++	    __read_boot_clock == dummy_clock_access) {
++		if (read_persistent)
++			__read_persistent_clock = read_persistent;
++
++		return 0;
++	}
++
++	return -EINVAL;
++}
++
+ void __init time_init(void)
+ {
+ 	u32 arch_timer_rate;
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -496,7 +496,11 @@ struct bio *bio_alloc_bioset(gfp_t gfp_m
+ 	return bio;
+ 
+ err_free:
+-	mempool_free(p, &bs->bio_pool);
++	if (!bs)
++		kfree(bio);
++	else
++		mempool_free(p, &bs->bio_pool);
++
+ 	return NULL;
+ }
+ EXPORT_SYMBOL(bio_alloc_bioset);
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -134,6 +134,7 @@ int irq_set_msi_desc(unsigned int irq, s
+ {
+ 	return irq_set_msi_desc_off(irq, 0, entry);
+ }
++EXPORT_SYMBOL(irq_set_msi_desc);
+ 
+ /**
+  *	irq_set_chip_data - set irq chip data for an irq
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -148,7 +148,7 @@ static ssize_t queue_state_write(void *d
+ 				 size_t count, loff_t *ppos)
+ {
+ 	struct request_queue *q = data;
+-	char opbuf[16] = { }, *op;
++	char opbuf[16] = { 0 }, *op;
+ 
+ 	/*
+ 	 * The "state" attribute is removed after blk_cleanup_queue() has called
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2631,6 +2631,10 @@ static int blk_mq_hctx_notify_dead(unsig
+ 	enum hctx_type type;
+ 
+ 	hctx = hlist_entry_safe(node, struct blk_mq_hw_ctx, cpuhp_dead);
++	if (!hctx) {
++		pr_err("No requests present in software queue\n");
++		return -EINVAL;
++	}
+ 	if (!cpumask_test_cpu(cpu, hctx->cpumask))
+ 		return 0;
+ 
+--- a/arch/arm64/include/asm/cpu.h
++++ b/arch/arm64/include/asm/cpu.h
+@@ -63,6 +63,9 @@ struct cpuinfo_arm64 {
+ 
+ 	/* pseudo-ZCR for recording maximum ZCR_EL1 LEN value: */
+ 	u64		reg_zcr;
++
++	/* Denver firmware revision */
++	u64		reg_aidr;
+ };
+ 
+ DECLARE_PER_CPU(struct cpuinfo_arm64, cpu_data);
+--- a/arch/arm64/kernel/cpuinfo.c
++++ b/arch/arm64/kernel/cpuinfo.c
+@@ -31,6 +31,7 @@
+  * values depending on configuration at or after reset.
+  */
+ DEFINE_PER_CPU(struct cpuinfo_arm64, cpu_data);
++EXPORT_PER_CPU_SYMBOL(cpu_data);
+ static struct cpuinfo_arm64 boot_cpu_data;
+ 
+ static const char *icache_policy_str[] = {
+@@ -197,7 +198,10 @@ static int c_show(struct seq_file *m, vo
+ 		seq_printf(m, "CPU architecture: 8\n");
+ 		seq_printf(m, "CPU variant\t: 0x%x\n", MIDR_VARIANT(midr));
+ 		seq_printf(m, "CPU part\t: 0x%03x\n", MIDR_PARTNUM(midr));
+-		seq_printf(m, "CPU revision\t: %d\n\n", MIDR_REVISION(midr));
++		seq_printf(m, "CPU revision\t: %d\n", MIDR_REVISION(midr));
++		if (MIDR_IMPLEMENTOR(midr) == ARM_CPU_IMP_NVIDIA)
++			seq_printf(m, "MTS version\t: %llu\n", cpuinfo->reg_aidr);
++		seq_printf(m, "\n");
+ 	}
+ 
+ 	return 0;
+@@ -412,6 +416,10 @@ static void __cpuinfo_store_cpu(struct c
+ 		info->reg_zcr = read_zcr_features();
+ 
+ 	cpuinfo_detect_icache_policy(info);
++
++	/* Denver firmware version */
++	if (MIDR_IMPLEMENTOR(info->reg_midr) == ARM_CPU_IMP_NVIDIA)
++		asm volatile("mrs %0, AIDR_EL1" : "=r" (info->reg_aidr) : );
+ }
+ 
+ void cpuinfo_store_cpu(void)
+--- a/arch/arm64/mm/cache.S
++++ b/arch/arm64/mm/cache.S
+@@ -6,13 +6,13 @@
+  * Copyright (C) 2012 ARM Ltd.
+  */
+ 
+-#include <linux/errno.h>
+ #include <linux/linkage.h>
+ #include <linux/init.h>
+ #include <asm/assembler.h>
+ #include <asm/cpufeature.h>
+ #include <asm/alternative.h>
+ #include <asm/asm-uaccess.h>
++#include <asm/errno.h>
+ 
+ /*
+  *	caches_clean_inval_pou_macro(start,end) [fixup]
+--- a/mm/kmemleak.c
++++ b/mm/kmemleak.c
+@@ -613,7 +613,7 @@ static struct kmemleak_object *create_ob
+ 		 * dependency issues with current->alloc_lock. In the worst
+ 		 * case, the command line is not correct.
+ 		 */
+-		strncpy(object->comm, current->comm, sizeof(object->comm));
++		strlcpy(object->comm, current->comm, sizeof(object->comm));
+ 	}
+ 
+ 	/* kernel backtrace */
+--- a/mm/mprotect.c
++++ b/mm/mprotect.c
+@@ -35,6 +35,15 @@
+ 
+ #include "internal.h"
+ 
++static bool can_change_pte_writable(pte_t pte)
++{
++	if (pte_present(pte)) {
++		if (pte_dirty(pte) && pte_write(pte))
++			return true;
++	}
++	return false;
++}
++
+ static unsigned long change_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
+ 		unsigned long addr, unsigned long end, pgprot_t newprot,
+ 		unsigned long cp_flags)
+@@ -137,6 +146,8 @@ static unsigned long change_pte_range(st
+ 					 !(vma->vm_flags & VM_SOFTDIRTY))) {
+ 				ptent = pte_mkwrite(ptent);
+ 			}
++			if (can_change_pte_writable(ptent))
++				ptent = pte_mkwrite(ptent);
+ 			ptep_modify_prot_commit(vma, addr, pte, oldpte, ptent);
+ 			pages++;
+ 		} else if (is_swap_pte(oldpte)) {
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -321,6 +321,7 @@ int ioremap_page_range(unsigned long add
+ 	flush_cache_vmap(addr, end);
+ 	return err;
+ }
++EXPORT_SYMBOL(ioremap_page_range);
+ 
+ static void vunmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end,
+ 			     pgtbl_mod_mask *mask)
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2066,30 +2066,43 @@ int isolate_lru_page(struct page *page)
+ 	return ret;
+ }
+ 
+-/*
+- * A direct reclaimer may isolate SWAP_CLUSTER_MAX pages from the LRU list and
+- * then get rescheduled. When there are massive number of tasks doing page
+- * allocation, such sleeping direct reclaimers may keep piling up on each CPU,
+- * the LRU list will go small and be scanned faster than necessary, leading to
+- * unnecessary swapping, thrashing and OOM.
+- */
+-static int too_many_isolated(struct pglist_data *pgdat, int file,
+-		struct scan_control *sc)
++static inline ulong node_page_state_snapshot(pg_data_t *pgdat,
++					     enum node_stat_item item)
+ {
+-	unsigned long inactive, isolated;
++	long x = atomic_long_read(&pgdat->vm_stat[item]);
+ 
+-	if (current_is_kswapd())
+-		return 0;
++#ifdef CONFIG_SMP
++	int cpu;
++	for_each_online_cpu(cpu)
++		x += per_cpu_ptr(pgdat->per_cpu_nodestats, cpu)->vm_node_stat_diff[item];
++
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
+ 
+-	if (!writeback_throttling_sane(sc))
+-		return 0;
++static int __too_many_isolated(struct pglist_data *pgdat, int file,
++		struct scan_control *sc, int safe)
++{
++	unsigned long inactive, isolated;
+ 
+ 	if (file) {
+-		inactive = node_page_state(pgdat, NR_INACTIVE_FILE);
+-		isolated = node_page_state(pgdat, NR_ISOLATED_FILE);
++		if (safe) {
++			inactive = node_page_state_snapshot(pgdat, NR_INACTIVE_FILE);
++			isolated = node_page_state_snapshot(pgdat, NR_ISOLATED_FILE);
++		} else {
++			inactive = node_page_state(pgdat, NR_INACTIVE_FILE);
++			isolated = node_page_state(pgdat, NR_ISOLATED_FILE);
++		}
+ 	} else {
+-		inactive = node_page_state(pgdat, NR_INACTIVE_ANON);
+-		isolated = node_page_state(pgdat, NR_ISOLATED_ANON);
++		if (safe) {
++			inactive = node_page_state_snapshot(pgdat, NR_INACTIVE_ANON);
++			isolated = node_page_state_snapshot(pgdat, NR_ISOLATED_ANON);
++		} else {
++			inactive = node_page_state(pgdat, NR_INACTIVE_ANON);
++			isolated = node_page_state(pgdat, NR_ISOLATED_ANON);
++		}
+ 	}
+ 
+ 	/*
+@@ -2104,6 +2117,32 @@ static int too_many_isolated(struct pgli
+ }
+ 
+ /*
++ * A direct reclaimer may isolate SWAP_CLUSTER_MAX pages from the LRU list and
++ * then get rescheduled. When there are massive number of tasks doing page
++ * allocation, such sleeping direct reclaimers may keep piling up on each CPU,
++ * the LRU list will go small and be scanned faster than necessary, leading to
++ * unnecessary swapping, thrashing and OOM.
++ */
++static int too_many_isolated(struct pglist_data *pgdat, int file,
++		struct scan_control *sc, int safe)
++{
++	if (current_is_kswapd())
++		return 0;
++
++	if (!writeback_throttling_sane(sc))
++		return 0;
++
++	if (unlikely(__too_many_isolated(pgdat, file, sc, 0))) {
++		if (safe)
++			return __too_many_isolated(pgdat, file, sc, safe);
++		else
++			return 1;
++	}
++
++	return 0;
++}
++
++/*
+  * move_pages_to_lru() moves pages from private @list to appropriate LRU list.
+  * On return, @list is reused as a list of pages to be freed by the caller.
+  *
+@@ -2203,8 +2242,9 @@ shrink_inactive_list(unsigned long nr_to
+ 	enum vm_event_item item;
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 	bool stalled = false;
++	int safe = 0;
+ 
+-	while (unlikely(too_many_isolated(pgdat, file, sc))) {
++	while (unlikely(too_many_isolated(pgdat, file, sc, safe))) {
+ 		if (stalled)
+ 			return 0;
+ 
+@@ -2215,6 +2255,8 @@ shrink_inactive_list(unsigned long nr_to
+ 		/* We are about to die and free our memory. Return now. */
+ 		if (fatal_signal_pending(current))
+ 			return SWAP_CLUSTER_MAX;
++
++		safe = 1;
+ 	}
+ 
+ 	lru_add_drain();

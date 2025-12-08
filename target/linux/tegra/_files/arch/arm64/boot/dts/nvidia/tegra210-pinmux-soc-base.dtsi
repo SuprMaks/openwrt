@@ -1,0 +1,31 @@
+
+#include <dt-bindings/pinctrl/pinctrl-tegra.h>
+
+ / {
+    pinmux@700008d4 {
+		clkreq_0_bi_dir_state: clkreq_0_bi_dir {
+			clkreq0 {
+				nvidia,pins = "pex_l0_clkreq_n_pa1";
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+		};
+		clkreq_1_bi_dir_state: clkreq_1_bi_dir {
+			clkreq1 {
+				nvidia,pins = "pex_l1_clkreq_n_pa4";
+				nvidia,tristate = <TEGRA_PIN_DISABLE>;
+			};
+		};
+		clkreq_0_in_dir_state: clkreq_0_in_dir {
+			clkreq0 {
+				nvidia,pins = "pex_l0_clkreq_n_pa1";
+				nvidia,tristate = <TEGRA_PIN_ENABLE>;
+			};
+		};
+		clkreq_1_in_dir_state: clkreq_1_in_dir {
+			clkreq1 {
+				nvidia,pins = "pex_l1_clkreq_n_pa4";
+				nvidia,tristate = <TEGRA_PIN_ENABLE>;
+			};
+		};
+	};
+ };

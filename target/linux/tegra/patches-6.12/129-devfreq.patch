@@ -1,0 +1,99 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -1951,6 +195,61 @@
+ 		vin-supply = <&vdd_5v0_sys>;
+ 	};
+ 
++	mem_emc_opp: opp-table {
++		compatible = "operating-points-v2";
++		opp-68M {
++			opp-hz = /bits/ 64 <68000000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++
++		opp-102M {
++			opp-hz = /bits/ 64 <102000000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++
++		opp-204M {
++			opp-hz = /bits/ 64 <204000000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++
++		opp-408M {
++			opp-hz = /bits/ 64 <408000000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++
++		opp-665M {
++			opp-hz = /bits/ 64 <665600000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++
++		opp-1600M {
++			opp-hz = /bits/ 64 <1600000000>;
++			opp-supported-hw = <1>;
++			/* opp-peak-kBps = <51000>; */
++		};
++	};
++
++	actmon@6000c800 {
++		compatible = "nvidia,tegra124-actmon";
++		reg = <0x0 0x6000c800 0x0 0x400>;
++		interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&tegra_car TEGRA210_CLK_ACTMON>,
++			 <&tegra_car TEGRA210_CLK_EMC>;
++		clock-names = "actmon", "emc";
++		resets = <&tegra_car TEGRA210_CLK_ACTMON>;
++		reset-names = "actmon";
++
++		operating-points-v2 = <&mem_emc_opp>;
++		interconnects = <&mc 39 &emc>;
++		interconnect-names = "cpu";
++		#cooling-cells = <2>;
++	};
++
+ 	sound {
+ 		compatible = "nvidia,tegra210-audio-graph-card";
+ 		status = "okay";
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -1951,6 +1951,32 @@
+ 		vin-supply = <&vdd_5v0_sys>;
+ 	};
+
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		nominal: emc-table@83400000 {
++			compatible = "nvidia,tegra210-emc-table";
++			reg = <0x00000000 0x83400000 0x00000000 0x10000>;
++		};
++
++		derated: emc-table@83410000 {
++			compatible = "nvidia,tegra210-emc-table";
++			reg = <0x00000000 0x83410000 0x00000000 0x10000>;
++		};
++	};
++
++	memory-controller@70019000 {
++		#interconnect-cells = <1>;
++	};
++
++	external-memory-controller@7001b000 {
++		memory-region = <&nominal>, <&derated>;
++		memory-region-names = "nominal", "derated";
++		#interconnect-cells = <0>;
++	};
++
+	mem_emc_opp: opp-table {
+		compatible = "operating-points-v2";
+		opp-68M {
