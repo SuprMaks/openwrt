@@ -2,14 +2,14 @@ src-git packages https://git.openwrt.org/feed/packages.git
 src-git luci https://git.openwrt.org/project/luci.git
 src-git routing https://git.openwrt.org/feed/routing.git
 src-git telephony https://git.openwrt.org/feed/telephony.git
-src-git video https://github.com/openwrt/video.git
+#src-git video https://github.com/openwrt/video.git
 #src-git targets https://github.com/openwrt/targets.git
 #src-git oldpackages http://git.openwrt.org/packages.git
 #src-link custom /usr/src/openwrt/custom-feed
 
 #src-git xjasonlyu https://github.com/xjasonlyu/tun2socks.git;v2.6.0
 src-git passwall https://github.com/xiaorouji/openwrt-passwall2.git;25.12.2-1
-src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git^e6a199fc3848cd5feabf2ce06bc5f7969100043a
+src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git
 src-git awg_openwrt https://github.com/Slava-Shchipunov/awg-openwrt.git;v24.10.4
 src-git gSpotx2f https://github.com/gSpotx2f/luci-app-internet-detector.git
 src-git ruantiblock https://github.com/gSpotx2f/ruantiblock_openwrt.git
