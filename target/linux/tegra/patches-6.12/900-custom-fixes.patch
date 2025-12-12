@@ -1,0 +1,79 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
+@@ -618,7 +618,9 @@
+ 		reg-shift = <2>;
+ 		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&tegra_car TEGRA210_CLK_UARTA>;
++		clock-names = "serial";
+ 		resets = <&tegra_car 6>;
++		reset-names = "serial";
+ 		dmas = <&apbdma 8>, <&apbdma 8>;
+ 		dma-names = "rx", "tx";
+ 		status = "disabled";
+@@ -630,7 +632,9 @@
+ 		reg-shift = <2>;
+ 		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&tegra_car TEGRA210_CLK_UARTB>;
++		clock-names = "serial";
+ 		resets = <&tegra_car 7>;
++		reset-names = "serial";
+ 		dmas = <&apbdma 9>, <&apbdma 9>;
+ 		dma-names = "rx", "tx";
+ 		status = "disabled";
+@@ -642,7 +646,9 @@
+ 		reg-shift = <2>;
+ 		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&tegra_car TEGRA210_CLK_UARTC>;
++		clock-names = "serial";
+ 		resets = <&tegra_car 55>;
++		reset-names = "serial";
+ 		dmas = <&apbdma 10>, <&apbdma 10>;
+ 		dma-names = "rx", "tx";
+ 		status = "disabled";
+@@ -654,7 +660,9 @@
+ 		reg-shift = <2>;
+ 		interrupts = <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>;
+ 		clocks = <&tegra_car TEGRA210_CLK_UARTD>;
++		clock-names = "serial";
+ 		resets = <&tegra_car 65>;
++		reset-names = "serial";
+ 		dmas = <&apbdma 19>, <&apbdma 19>;
+ 		dma-names = "rx", "tx";
+ 		status = "disabled";
+@@ -665,6 +673,7 @@
+ 		reg = <0x0 0x7000a000 0x0 0x100>;
+ 		#pwm-cells = <2>;
+ 		clocks = <&tegra_car TEGRA210_CLK_PWM>;
++		clock-names = "pwm";
+ 		resets = <&tegra_car 17>;
+ 		reset-names = "pwm";
+ 		status = "disabled";
+@@ -916,7 +925,9 @@
+ 
+ 			pd_vic: vic {
+ 				clocks = <&tegra_car TEGRA210_CLK_VIC03>;
++				clock-names = "vic";
+ 				resets = <&tegra_car 178>;
++				reset-names = "vic";
+ 				#power-domain-cells = <0>;
+ 			};
+ 
+@@ -1384,8 +1395,8 @@
+ 			clocks = <&tegra_car TEGRA210_CLK_D_AUDIO>;
+ 			clock-names = "ahub";
+ 			assigned-clocks = <&tegra_car TEGRA210_CLK_D_AUDIO>;
+-			assigned-clock-parents = <&tegra_car TEGRA210_CLK_PLL_P>;
+-			assigned-clock-rates = <81600000>;
++			assigned-clock-parents = <&tegra_car TEGRA210_CLK_PLL_A_OUT0>;
++			/* assigned-clock-rates = <81600000>; */
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
+ 			ranges = <0x702d0000 0x702d0000 0x0000e400>;
+@@ -1859,6 +1870,7 @@
+ 			 <&tegra_car TEGRA210_CLK_QSPI_PM>;
+ 		clock-names = "qspi", "qspi_out";
+ 		resets = <&tegra_car 211>;
++		reset-names = "qspi";
+ 		dmas = <&apbdma 5>, <&apbdma 5>;
+ 		dma-names = "rx", "tx";
+ 		status = "disabled";

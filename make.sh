@@ -28,8 +28,8 @@ patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && ./script
 
 ./scripts/feeds install -a && \
 
-rm -rf feeds/packages/lang/golang && \
-git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang && \
+# rm -rf feeds/packages/lang/golang && \
+# git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang && \
 
 summarize_conf && \
 #make defconfig && \
@@ -56,7 +56,7 @@ sed -i 's/CONFIG_TARGET_SUFFIX="muslgnueabi"/CONFIG_TARGET_SUFFIX="muslgnueabihf
 #sed -i '/--disable-multilib \\/d' ./toolchain/gcc/common.mk && \
 grep -q 'CONFIG_ATH10K_LEDS=y' .config || \
 # CMAKE_POLICY_VERSION_MINIMUM=3.5 GOPROXY=https://goproxy.cn
-CMAKE_POLICY_VERSION_MINIMUM=3.5 make -j16 -l $(nproc) download world
+make -j16 -l $(nproc) download world
 
 #make ./scripts/config/conf >/dev/null || { make ./scripts/config/conf; exit 1; } && \
 #make -j $(($(nproc)+1)) download clean world

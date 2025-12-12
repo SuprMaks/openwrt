@@ -1,0 +1,19 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
+@@ -2010,13 +2010,13 @@
+ 
+ 		L2: l2-cache {
+ 			compatible = "cache";
+-			cache-level = <2>;
+-			cache-unified;
++			/* cache-level = <2>;
++			cache-unified; */
+ 		};
+ 	};
+ 
+ 	pmu {
+-		compatible = "arm,cortex-a57-pmu";
++		compatible = "arm,armv8-pmuv3";
+ 		interrupts = <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
