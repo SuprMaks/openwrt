@@ -19,13 +19,19 @@ make defconfig && \
 #./scripts/feeds update -f nss && ./scripts/feeds install -a -p nss && \
 ./scripts/feeds update -a && \
 
-# Apply curl_wolfssl_quic_tls13.patch
+cp build-fixes/feeds.packages.net.unbound.patches.011-block_AAAA.patch feeds/packages/net/unbound/patches/011-block_AAAA.patch && \
+cp build-fixes/feeds.packages.net.unbound.patches.012-block_A_DNSSEC.patch feeds/packages/net/unbound/patches/012-block_A_DNSSEC.patch && \
+
+mkdir -p ./feeds/packages/net/ntpd/patches && \
+cp build-fixes/feeds.packages.net.ntpd.patches.010-gcc14.patch feeds/packages/net/ntpd/patches/010-gcc14.patch  && \
+
+# Apply curl_wolfssl_quic_tls13.patch && \
 patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && ./scripts/feeds update -a
 
 ./scripts/feeds install -a && \
 
-rm -rf feeds/packages/lang/golang && \
-git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang && \
+# rm -rf feeds/packages/lang/golang && \
+# git clone https://github.com/sbwml/packages_lang_golang -b 24.x feeds/packages/lang/golang && \
 
 summarize_conf && \
 #make defconfig && \
