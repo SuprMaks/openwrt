@@ -1,10 +1,13 @@
 --- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
 +++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
-@@ -20,6 +20,7 @@
+@@ -20,6 +20,10 @@
  
  	chosen {
  		stdout-path = "serial0:115200n8";
 +		bootargs = "console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x70006000";
++		/* nvidia,ether-mac = "00:04:4b:f2:36:4d";
++		nvidia,bluetooth-mac = "00:04:4b:f2:36:4c";
++		nvidia,wifi‑mac = ""; */
  	};
  
  	memory@80000000 {
