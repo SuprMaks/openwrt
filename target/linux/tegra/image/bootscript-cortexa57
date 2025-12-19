@@ -1,6 +1,6 @@
 part uuid ${devtype} ${devnum}:2 ptuuid
 
-setenv bootargs "root=PARTUUID=${ptuuid} rw rootwait console=ttyS0,115200 console=tty0"
+setenv bootargs "root=PARTUUID=${ptuuid} rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0"
 
 load ${devtype} ${devnum}:${bootpart} ${kernel_addr_r} Image
 load ${devtype} ${devnum}:${bootpart} ${fdt_addr_r} ${soc}-${board}.dtb
