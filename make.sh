@@ -2,6 +2,9 @@
 
 source $(dirname -- "$0")/build-fixes/config.sh
 
+umask 0022
+setfacl -d --set u::rwx,g::rx,o::rx .
+
 [[ -d build_dir/malformed_packages ]] && rm -rf build_dir/malformed_packages
 mkdir -p ./build_dir/malformed_packages
 git clone https://github.com/gSpotx2f/luci-app-temp-status.git build_dir/malformed_packages/luci-app-temp-status && \
