@@ -128,30 +128,25 @@ TARGET_CFLAGS += \
 
 # --enable-stunnel needed for OpenSSL API compatibility bits
 CONFIGURE_ARGS += \
-	--enable-quic \
 	--enable-reproducible-build \
 	--enable-lighty \
 	--enable-opensslall \
 	--enable-opensslextra \
-	--enable-earlydata \
 	--enable-sni \
 	--enable-stunnel \
 	--enable-altcertchains \
-	--enable-crypttests \
-	--enable-examples \
-	--enable-tls13 \
+	--$(if $(CONFIG_PACKAGE_libwolfssl-benchmark),enable,disable)-crypttests \
+	--disable-examples \
 	--disable-jobserver \
-	--enable-keying-material \
-	--enable-keylog-export \
-	--enable-cmac \
 	--$(if $(CONFIG_IPV6),enable,disable)-ipv6 \
 	--$(if $(CONFIG_WOLFSSL_HAS_AES_CCM),enable,disable)-aesccm \
 	--$(if $(CONFIG_WOLFSSL_HAS_CERTGEN),enable,disable)-certgen \
 	--$(if $(CONFIG_WOLFSSL_HAS_CHACHA_POLY),enable,disable)-chacha \
 	--$(if $(CONFIG_WOLFSSL_HAS_CHACHA_POLY),enable,disable)-poly1305 \
-	--enable-dh \
+	--$(if $(CONFIG_WOLFSSL_HAS_DH),enable,disable)-dh \
 	--$(if $(CONFIG_WOLFSSL_HAS_ARC4),enable,disable)-arc4 \
 	--$(if $(CONFIG_WOLFSSL_HAS_TLSV10),enable,disable)-tlsv10 \
+	--$(if $(CONFIG_WOLFSSL_HAS_TLSV13),enable,disable)-tls13 \
 	--$(if $(CONFIG_WOLFSSL_HAS_SESSION_TICKET),enable,disable)-session-ticket \
 	--$(if $(CONFIG_WOLFSSL_HAS_DTLS),enable,disable)-dtls \
 	--$(if $(CONFIG_WOLFSSL_HAS_ECC25519),enable,disable)-curve25519 \
