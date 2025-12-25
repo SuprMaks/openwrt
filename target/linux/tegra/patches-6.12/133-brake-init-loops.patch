@@ -1,0 +1,154 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -635,10 +635,12 @@
+ 
+ 			admaif@702d0000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 			};
+ 
+ 			i2s@702d1200 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -665,6 +667,7 @@
+ 
+ 			i2s@702d1300 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -691,6 +694,7 @@
+ 
+ 			sfc@702d2000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -716,6 +720,7 @@
+ 
+ 			sfc@702d2200 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -741,6 +746,7 @@
+ 
+ 			sfc@702d2400 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -766,6 +772,7 @@
+ 
+ 			sfc@702d2600 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -791,6 +798,7 @@
+ 
+ 			amx@702d3000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -840,6 +848,7 @@
+ 
+ 			amx@702d3100 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -889,6 +898,7 @@
+ 
+ 			adx@702d3800 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -938,6 +948,7 @@
+ 
+ 			adx@702d3900 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -987,6 +998,7 @@
+ 
+ 			dmic@702d4000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1012,6 +1024,7 @@
+ 
+ 			dmic@702d4100 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1037,6 +1050,7 @@
+ 
+ 			processing-engine@702d8000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1062,6 +1076,7 @@
+ 
+ 			processing-engine@702d8400 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1087,6 +1102,7 @@
+ 
+ 			mvc@702da000 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1112,6 +1128,7 @@
+ 
+ 			mvc@702da200 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+@@ -1137,6 +1154,7 @@
+ 
+ 			amixer@702dbb00 {
+ 				status = "okay";
++				post-init-providers = <&{/aconnect@702c0000/ahub@702d0800/ports}>;
+ 
+ 				ports {
+ 					#address-cells = <1>;
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -1283,6 +1283,8 @@
+ 			};
+ 
+ 			ports {
++				post-init-providers = <&{/sound}>;
++
+ 				xbar_i2s3_port: port@c {
+ 					reg = <0xc>;
+ 

@@ -1,0 +1,20 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -628,7 +628,7 @@
+ 	};
+ 
+ 	aconnect@702c0000 {
+-		status = "okay";
++		status = "disabled";
+ 
+ 		ahub@702d0800 {
+ 			status = "okay";
+@@ -2056,7 +2056,7 @@
+ 
+ 	sound {
+ 		compatible = "nvidia,tegra210-audio-graph-card";
+-		status = "okay";
++		status = "disabled";
+ 
+ 		dais = /* FE */
+ 		       <&admaif1_port>, <&admaif2_port>, <&admaif3_port>,

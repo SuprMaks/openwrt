@@ -1,0 +1,11 @@
+--- a/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dts
+@@ -586,7 +586,7 @@
+ 	};
+ 
+ 	mmc@700b0400 {
+-		status = "okay";
++		status = "disabled";
+ 		bus-width = <4>;
+ 
+ 		vqmmc-supply = <&vdd_1v8>;

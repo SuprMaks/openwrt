@@ -25,9 +25,11 @@ make defconfig && \
 
 cp build-fixes/feeds.packages.net.unbound.patches.011-block_AAAA.patch feeds/packages/net/unbound/patches/011-block_AAAA.patch && \
 cp build-fixes/feeds.packages.net.unbound.patches.012-block_A_DNSSEC.patch feeds/packages/net/unbound/patches/012-block_A_DNSSEC.patch && \
+cp build-fixes/package.network.utils.iproute2.patches.900-bbr-v3.patch package/network/utils/iproute2/patches/900-bbr-v3.patch && \
 
 # Apply curl_wolfssl_quic_tls13.patch
-patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && ./scripts/feeds update -a
+# patch --verbose -p0 -N < ./build-fixes/curl_wolfssl_quic_tls13.patch && \
+./scripts/feeds update -a
 
 ./scripts/feeds install -a && \
 

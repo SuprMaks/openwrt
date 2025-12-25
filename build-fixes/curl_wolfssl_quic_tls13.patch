@@ -9,16 +9,6 @@
  	default n
 
  comment "Miscellaneous"
---- package/libs/wolfssl/Makefile
-+++ package/libs/wolfssl/Makefile
-@@ -125,6 +125,7 @@
- 
- # --enable-stunnel needed for OpenSSL API compatibility bits
- CONFIGURE_ARGS += \
-+	--enable-quic \
- 	--enable-reproducible-build \
- 	--enable-lighty \
- 	--enable-opensslall \
 --- ./feeds/packages/libs/ngtcp2/Makefile
 +++ ./feeds/packages/libs/ngtcp2/Makefile
 @@ -22,7 +22,7 @@
@@ -62,11 +52,14 @@
  	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/curl-config $(1)/usr/bin/
 --- package/libs/wolfssl/Makefile
 +++ package/libs/wolfssl/Makefile
-@@ -132,6 +132,7 @@ CONFIGURE_ARGS += \
+@@ -133,6 +133,8 @@ CONFIGURE_ARGS += \
+ 	--enable-stunnel \
  	--enable-altcertchains \
  	--$(if $(CONFIG_PACKAGE_libwolfssl-benchmark),enable,disable)-crypttests \
-	--enable-examples \
-+	--enable-earlydata
+-	--disable-examples \
++	--enable-examples \
++	--enable-earlydata \
++	--enable-quic \
  	--disable-jobserver \
  	--$(if $(CONFIG_IPV6),enable,disable)-ipv6 \
  	--$(if $(CONFIG_WOLFSSL_HAS_AES_CCM),enable,disable)-aesccm \
