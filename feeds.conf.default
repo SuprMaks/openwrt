@@ -13,7 +13,7 @@ src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages
 src-git awg_openwrt https://github.com/Slava-Shchipunov/awg-openwrt.git;v24.10.4
 src-git gSpotx2f https://github.com/gSpotx2f/luci-app-internet-detector.git
 src-git ruantiblock https://github.com/gSpotx2f/ruantiblock_openwrt.git
-src-git remittor https://github.com/remittor/zapret-openwrt.git
+src-git remittor https://github.com/remittor/zapret-openwrt.git;master
 
 src-cpy malformed_packages build_dir/malformed_packages/
 #src-git luci_app_temp_status https://github.com/gSpotx2f/luci-app-temp-status.git
