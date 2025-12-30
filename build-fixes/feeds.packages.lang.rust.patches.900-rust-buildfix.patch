@@ -1,0 +1,10 @@
+--- a ./feeds/packages/lang/rust/rust-values.mk
++++ b ./feeds/packages/lang/rust/rust-values.mk
+@@ -59,6 +59,7 @@ ifeq ($(ARCH),arm)
+   endif
+ 
+   ifeq ($(CONFIG_HAS_FPU),y)
++    RUSTC_TARGET_ARCH:=$(subst musleabihf,musleabi,$(RUSTC_TARGET_ARCH))
+     RUSTC_TARGET_ARCH:=$(subst musleabi,musleabihf,$(RUSTC_TARGET_ARCH))
+     RUSTC_TARGET_ARCH:=$(subst gnueabi,gnueabihf,$(RUSTC_TARGET_ARCH))
+   endif

@@ -1,0 +1,93 @@
+--- a/services/localzone.c
++++ b/services/localzone.c
+@@ -1608,7 +1608,7 @@ local_zone_does_not_cover(struct local_z
+ 	struct local_data key;
+ 	struct local_data* ld = NULL;
+ 	struct local_rrset* lr = NULL;
+-	if(z->type == local_zone_always_transparent || z->type == local_zone_block_a)
++	if(z->type == local_zone_always_transparent || z->type == local_zone_block_a || z->type == local_zone_block_aaaa)
+ 		return 1;
+ 	if(z->type != local_zone_transparent
+ 		&& z->type != local_zone_typetransparent
+@@ -1695,6 +1695,16 @@ local_zones_zone_answer(struct local_zon
+ 		}
+ 
+ 		return 0;
++	} else if(lz_type == local_zone_block_aaaa) {
++		/* Return NODATA for all AAAA queries */
++		if(qinfo->qtype == LDNS_RR_TYPE_AAAA) {
++			local_error_encode(qinfo, env, edns, repinfo, buf, temp,
++				LDNS_RCODE_NOERROR, (LDNS_RCODE_NOERROR|BIT_AA),
++				LDNS_EDE_NONE, NULL);
++				return 1;
++		}
++
++		return 0;
+ 	} else if(lz_type == local_zone_always_null) {
+ 		/* 0.0.0.0 or ::0 or noerror/nodata for this zone type,
+ 		 * used for blocklists. */
+@@ -1862,7 +1872,8 @@ local_zones_answer(struct local_zones* z
+ 			lzt == local_zone_typetransparent ||
+ 			lzt == local_zone_inform ||
+ 			lzt == local_zone_always_transparent ||
+-			lzt == local_zone_block_a) &&
++			lzt == local_zone_block_a ||
++			lzt == local_zone_block_aaaa) &&
+ 			local_zone_does_not_cover(z, qinfo, labs)) {
+ 			lock_rw_unlock(&z->lock);
+ 			z = NULL;
+@@ -1911,6 +1922,7 @@ local_zones_answer(struct local_zones* z
+ 	if(lzt != local_zone_always_refuse
+ 		&& lzt != local_zone_always_transparent
+ 		&& lzt != local_zone_block_a
++		&& lzt != local_zone_block_aaaa
+ 		&& lzt != local_zone_always_nxdomain
+ 		&& lzt != local_zone_always_nodata
+ 		&& lzt != local_zone_always_deny
+@@ -1942,6 +1954,7 @@ const char* local_zone_type2str(enum loc
+ 		case local_zone_inform_redirect: return "inform_redirect";
+ 		case local_zone_always_transparent: return "always_transparent";
+ 		case local_zone_block_a: return "block_a";
++		case local_zone_block_aaaa: return "block_aaaa";
+ 		case local_zone_always_refuse: return "always_refuse";
+ 		case local_zone_always_nxdomain: return "always_nxdomain";
+ 		case local_zone_always_nodata: return "always_nodata";
+@@ -1978,6 +1991,8 @@ int local_zone_str2type(const char* type
+ 		*t = local_zone_always_transparent;
+ 	else if(strcmp(type, "block_a") == 0)
+ 		*t = local_zone_block_a;
++	else if(strcmp(type, "block_aaaa") == 0)
++		*t = local_zone_block_aaaa;
+ 	else if(strcmp(type, "always_refuse") == 0)
+ 		*t = local_zone_always_refuse;
+ 	else if(strcmp(type, "always_nxdomain") == 0)
+--- a/services/localzone.h
++++ b/services/localzone.h
+@@ -90,6 +90,8 @@ enum localzone_type {
+ 	local_zone_always_transparent,
+ 	/** resolve normally, even when there is local data but return NODATA for A queries */
+ 	local_zone_block_a,
++	/** resolve normally, even when there is local data but return NODATA for AAAA queries */
++	local_zone_block_aaaa,
+ 	/** answer with error, even when there is local data */	
+ 	local_zone_always_refuse,
+ 	/** answer with nxdomain, even when there is local data */
+--- a/util/configparser.y
++++ b/util/configparser.y
+@@ -2285,6 +2285,7 @@ server_local_zone: VAR_LOCAL_ZONE STRING
+ 		   && strcmp($3, "typetransparent")!=0
+ 		   && strcmp($3, "always_transparent")!=0
+ 		   && strcmp($3, "block_a")!=0
++		   && strcmp($3, "block_aaaa")!=0
+ 		   && strcmp($3, "always_refuse")!=0
+ 		   && strcmp($3, "always_nxdomain")!=0
+ 		   && strcmp($3, "always_nodata")!=0
+@@ -2297,7 +2298,7 @@ server_local_zone: VAR_LOCAL_ZONE STRING
+ 			yyerror("local-zone type: expected static, deny, "
+ 				"refuse, redirect, transparent, "
+ 				"typetransparent, inform, inform_deny, "
+-				"inform_redirect, always_transparent, block_a,"
++				"inform_redirect, always_transparent, block_a, block_aaaa,"
+ 				"always_refuse, always_nxdomain, "
+ 				"always_nodata, always_deny, always_null, "
+ 				"noview, nodefault or ipset");
