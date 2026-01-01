@@ -2,6 +2,9 @@
 
 source $(dirname -- "$0")/build-fixes/config.sh
 
+setfacl --recursive --modify u::rwx,g::rx,o::rx .
+setfacl --recursive -d --set u::rwx,g::rx,o::rx .
+
 umask 0022
 setfacl -d --set u::rwx,g::rx,o::rx .
 
