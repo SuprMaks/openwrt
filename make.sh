@@ -2,6 +2,9 @@
 
 source $(dirname -- "$0")/build-fixes/config.sh
 
+setfacl --recursive --modify u::rwx,g::rx,o::rx .
+setfacl --recursive -d --set u::rwx,g::rx,o::rx .
+
 umask 0022
 setfacl -d --set u::rwx,g::rx,o::rx .
 
@@ -48,7 +51,7 @@ summarize_conf && \
 #cp build-fixes/feeds.packages.lang.rust.patches.900-rust-buildfix.patch feeds/packages/lang/rust/patches/900-rust-buildfix.patch && \
 #mkdir feeds/packages/net/ntpd/patches && cp build-fixes/900-package-ntp-fix-build-with-gcc-14.diff feeds/packages/net/ntpd/patches/900-package-ntp-fix-build-with-gcc-14.patch && \
 #make package/feeds/packages/ntpd/{clean,prepare} && \
-# git apply build-fixes/feeds.packages.lang.rust.patches.900-rust-buildfix.patch && \
+git apply build-fixes/feeds.packages.lang.rust.patches.900-rust-buildfix.patch && \
 
 #make clean && \
 
