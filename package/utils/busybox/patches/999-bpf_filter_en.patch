@@ -1,0 +1,11 @@
+--- a/networking/udhcp/dhcpc.c
++++ b/networking/udhcp/dhcpc.c
+@@ -1038,7 +1038,7 @@ static int udhcp_raw_socket(int ifindex)
+ 	/*sock.sll_addr[8] = ???;*/
+ 	xbind(fd, (struct sockaddr *) &sock, sizeof(sock));
+ 
+-#if 0 /* Several users reported breakage when BPF filter is used */
++#if 1 /* Several users reported breakage when BPF filter is used */
+ 	if (CLIENT_PORT == 68) {
+ 		/* Use only if standard port is in use */
+ 		/*
