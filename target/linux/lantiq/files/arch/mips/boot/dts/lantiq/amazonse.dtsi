@@ -202,8 +202,7 @@
 
 		usb: usb@e101000 {
 			compatible = "lantiq,ase-usb";
-			reg = <0xe101000 0x1000
-				0xe120000 0x3f000>;
+			reg = <0xe101000 0x1000>, <0xe120000 0x3f000>;
 			interrupt-parent = <&icu0>;
 			interrupts = <39>;
 			dr_mode = "host";
@@ -222,7 +221,7 @@
 			reg = <0xe105300 0x100>;
 		};
 
-		ppe@e234000 {
+		ppe: ppe@e234000 {
 			compatible = "lantiq,ppe-ase";
 			reg = <0xe234000 0x40000>;
 			interrupt-parent = <&icu0>;
